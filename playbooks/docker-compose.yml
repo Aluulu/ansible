@@ -10,8 +10,11 @@
         mode: '0644'
 
     - name: Start AdGuard
-      ansible.builtin.command:
-        cmd: docker compose -f "{{ ansible_facts['env']['HOME'] }}/compose.yaml" up -d
+      community.docker.docker_compose_v2:
+        project_src: "{{ ansible_facts['env']['HOME'] }}"
+        files:
+          - compose.yaml
+        state: present
 
 
 - name: Deploy Media Server
@@ -25,8 +28,11 @@
         mode: '0644'
 
     - name: Start Media Server
-      ansible.builtin.command:
-        cmd: docker compose -f "{{ ansible_facts['env']['HOME'] }}/compose.yaml" up -d
+      community.docker.docker_compose_v2:
+        project_src: "{{ ansible_facts['env']['HOME'] }}"
+        files:
+          - compose.yaml
+        state: present
 
 
 - name: Deploy Other Server
@@ -40,5 +46,8 @@
         mode: '0644'
 
     - name: Start Other Server
-      ansible.builtin.command:
-        cmd: docker compose -f "{{ ansible_facts['env']['HOME'] }}/compose.yaml" up -d
+      community.docker.docker_compose_v2:
+        project_src: "{{ ansible_facts['env']['HOME'] }}"
+        files:
+          - compose.yaml
+        state: present
