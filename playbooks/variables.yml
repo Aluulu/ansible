@@ -1,0 +1,8 @@
+---
+- name: Test variables
+  hosts: all
+
+  tasks:
+    - name: Show machine information
+      ansible.builtin.debug:
+        msg: "I am {{ inventory_hostname }}, and I am a {{ machine_type }}"

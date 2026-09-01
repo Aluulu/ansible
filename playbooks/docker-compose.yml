@@ -1,0 +1,44 @@
+---
+- name: Deploy AdGuard
+  hosts: zoro
+
+  tasks:
+    - name: Copy AdGuard Compose file
+      ansible.builtin.copy:
+        src: ../files/docker/adguard-server.yaml
+        dest: "{{ ansible_facts['env']['HOME'] }}/compose.yaml"
+        mode: '0644'
+
+    - name: Start AdGuard
+      ansible.builtin.command:
+        cmd: docker compose -f "{{ ansible_facts['env']['HOME'] }}/compose.yaml" up -d
+
+
+- name: Deploy Media Server
+  hosts: nami
+
+  tasks:
+    - name: Copy Media Server Compose file
+      ansible.builtin.copy:
+        src: ../files/docker/media-server.yaml
+        dest: "{{ ansible_facts['env']['HOME'] }}/compose.yaml"
+        mode: '0644'
+
+    - name: Start Media Server
+      ansible.builtin.command:
+        cmd: docker compose -f "{{ ansible_facts['env']['HOME'] }}/compose.yaml" up -d
+
+
+- name: Deploy Other Server
+  hosts: goku
+
+  tasks:
+    - name: Copy Other Server Compose file
+      ansible.builtin.copy:
+        src: ../files/docker/other-server.yaml
+        dest: "{{ ansible_facts['env']['HOME'] }}/compose.yaml"
+        mode: '0644'
+
+    - name: Start Other Server
+      ansible.builtin.command:
+        cmd: docker compose -f "{{ ansible_facts['env']['HOME'] }}/compose.yaml" up -d

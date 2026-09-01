@@ -1,0 +1,88 @@
+---
+- name: Install Docker
+  hosts: servers
+  become: true
+
+  tasks:
+    - name: Install Docker prerequisites
+      ansible.builtin.apt:
+        name:
+          - ca-certificates
+          - curl
+        state: present
+        update_cache: true
+
+    - name: Create Docker keyrings directory
+      ansible.builtin.file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: '0755'
+
+    - name: Download Docker GPG key
+      ansible.builtin.get_url:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        dest: /etc/apt/keyrings/docker.asc
+        mode: '0644'
+
+    - name: Add Docker repository
+      ansible.builtin.deb822_repository:
+        name: docker
+        types: deb
+        uris: https://download.docker.com/linux/ubuntu
+        suites: "{{ ansible_facts['distribution_release'] }}"
+        components:
+          - stable
+        signed_by: /etc/apt/keyrings/docker.asc
+        state: present
+        enabled: true
+
+    - name: Install Docker
+      ansible.builtin.apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-buildx-plugin
+          - docker-compose-plugin
+        state: present
+        update_cache: true
+
+    - name: Enable and start Docker
+      ansible.builtin.systemd:
+        name: docker
+        enabled: true
+        state: started
+
+    - name: Add user to Docker group
+      ansible.builtin.user:
+        name: "{{ ansible_user }}"
+        groups: docker
+        append: true
+
+    - name: Create Docker group
+      ansible.builtin.group:
+        name: docker_user
+        gid: 2000
+        state: present
+
+    - name: Create Docker service user
+      ansible.builtin.user:
+        name: docker_user
+        uid: 2000
+        group: docker_user
+        system: true
+        create_home: false
+
+    - name: Add Ansible user to Docker group
+      ansible.builtin.user:
+        name: "{{ ansible_user }}"
+        groups: docker_user
+        append: true
+
+    - name: Create Docker config directory
+      ansible.builtin.file:
+        path: /config
+        state: directory
+        owner: docker_user
+        group: docker_user
+        mode: '0770'

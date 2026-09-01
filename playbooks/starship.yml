@@ -1,0 +1,25 @@
+---
+- name: Configure Starship on servers
+  hosts: servers
+
+  tasks:
+    - name: Deploy server Starship configuration
+      ansible.builtin.copy:
+        src: ../files/starship/server.toml
+        dest: "{{ ansible_facts.user_dir }}/.config/starship.toml"
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        mode: '0644'
+
+
+- name: Configure Starship on desktops
+  hosts: desktops
+
+  tasks:
+    - name: Deploy desktop Starship configuration
+      ansible.builtin.copy:
+        src: ../files/starship/desktop.toml
+        dest: "{{ ansible_facts.user_dir }}/.config/starship.toml"
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        mode: '0644'

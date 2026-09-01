@@ -1,0 +1,16 @@
+# Ansible
+*.retry
+
+# Secrets
+*.vault
+*.vault.yml
+vault_password_file
+
+# Local configuration
+.env
+.env.*
+
+# Editor / OS junk
+.vscode/
+.idea/
+*.swp

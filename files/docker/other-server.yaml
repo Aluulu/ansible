@@ -1,0 +1,162 @@
+services:
+  wireguard:
+    image: ghcr.io/linuxserver/wireguard
+    container_name: wireguard
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    environment:
+      - PUID=2000
+      - PGID=2000
+      - TZ=Europe/London
+      - SERVERPORT=51820 #optional
+      - PEERDNS=94.140.14.14 # Uses AdGuard DNS Server
+      - PEERS=1,2,3,4,5
+    volumes:
+      - /config/wireguard:/config
+      - /lib/modules:/lib/modules
+    ports:
+      - 51820:51820/udp
+    sysctls:
+      - net.ipv4.conf.all.src_valid_mark=1
+    restart: no
+
+
+  portainer:
+    image: portainer/portainer-ce
+    container_name: portainer
+    command: -H unix:///var/run/docker.sock
+    ports:
+      - "9443:9443"
+      - "8000:8000"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - /config/portainer:/data
+    restart: always
+
+
+  watchtower:
+    image: nickfedor/watchtower:latest
+    container_name: watchtower
+    restart: no
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - WATCHTOWER_CLEANUP=true
+
+
+  bambuddy:
+    image: ghcr.io/maziggy/bambuddy:latest
+    build: .
+    container_name: bambuddy
+    # File ownership inside the data and logs volumes is normalised by the
+    # entrypoint at startup (chowns to PUID:PGID and drops privileges via
+    # gosu before running the app). Override PUID / PGID below to match
+    # your host user if needed — defaults to 1000:1000 to match the
+    # historical compose `user:` directive.
+    #
+    # Allow binding to privileged ports (322, 990) as non-root user — required
+    # for FTPS in every VP mode and for the RTSPS camera proxy in proxy mode +
+    # non-proxy modes that have a target printer configured. Without this, the
+    # FTP and RTSP listeners silently fail.
+    cap_add:
+      - NET_BIND_SERVICE
+    #
+    # LINUX: Use host mode for printer discovery and camera streaming
+    #network_mode: host
+    #
+    # macOS/WINDOWS: Docker Desktop doesn't support host mode.
+    # Comment out "network_mode: host" above and uncomment "ports:" below.
+    # Note: Printer discovery won't work - add printers manually by IP.
+    ports:
+      - "${PORT:-7000}:7000"
+      - "3000:3000"                  # Virtual printer bind/detect
+      - "3002:3002"                  # Virtual printer bind/detect
+      - "8883:8883"                  # Virtual printer MQTT
+      - "990:990"                    # Virtual printer FTP control
+      - "6000:6000"                  # Virtual printer file transfer tunnel
+      - "322:322"                    # Virtual printer RTSP camera (X1/H2/P2; proxy mode + non-proxy modes with a target printer)
+      - "2024-2026:2024-2026"        # Virtual printer proprietary ports (A1/P1S)
+      - "50000-50100:50000-50100"    # Virtual printer FTP passive data
+    volumes:
+      - bambuddy_data:/app/data
+      - bambuddy_logs:/app/logs
+      #
+      # OPTIONAL — only needed if you ALSO run a native install of Bambuddy
+      # on the same host and want both installs to share the same Virtual
+      # Printer CA certificate (so the slicer only has to trust one CA).
+      # Most Docker-only users should leave this commented out — the
+      # entrypoint will keep the VP data inside the named volume above.
+      # If uncommented, the entrypoint chowns the host directory to
+      # PUID:PGID on first start so the container user can write to it.
+      #- ./virtual_printer:/app/data/virtual_printer
+      #
+      # Mount scheduled backup output to NAS or external storage
+      # Backups default to DATA_DIR/backups/ inside the data volume.
+      # Uncomment to store them externally (e.g. on a NAS share).
+      #- /path/to/nas/bambuddy-backups:/app/data/backups
+      #
+      # Tailscale integration (optional): mount the host's tailscaled socket
+      # so Bambuddy can request Let's Encrypt certs for virtual printers via
+      # your tailnet's MagicDNS name. Requires:
+      #   1. Tailscale installed + `tailscale up` completed on the host
+      #   2. `sudo tailscale set --operator=<container-user>` on the host so
+      #      the user running the container can call `tailscale cert`
+      # Without this mount, the Tailscale toggle in the UI is harmless —
+      # Bambuddy falls back to self-signed certs.
+      #- /var/run/tailscale/tailscaled.sock:/var/run/tailscale/tailscaled.sock
+    environment:
+      - TZ=${TZ:-Europe/London}
+      # User/group the container drops to after the entrypoint normalises
+      # ownership on /app/data and /app/logs. Match your host user (run
+      # `id -u` / `id -g`) if you want files written by the container to
+      # show up as your user on the host. Defaults to 1000:1000.
+      - PUID=${PUID:-2000}
+      - PGID=${PGID:-2000}
+      # Port BamBuddy runs on (default: 8000)
+      # Usage: PORT=8080 docker compose up -d
+      - PORT=${PORT:-7000}
+      # Virtual printer: Set to the Docker host's IP when using bridge mode (ports:).
+      # Required for FTP passive mode to work behind NAT.
+      # Example: VIRTUAL_PRINTER_PASV_ADDRESS=192.168.1.100
+      #- VIRTUAL_PRINTER_PASV_ADDRESS=
+      #
+      # External PostgreSQL (optional — uses SQLite by default)
+      # Example: DATABASE_URL=postgresql+asyncpg://bambuddy:password@db-host:5432/bambuddy
+      #- DATABASE_URL=
+      #
+      # Slicer API sidecar (optional — Settings → "Use Slicer API" toggles this on).
+      # Default points at the OrcaSlicer sidecar on the docker host; change if you
+      # run the sidecar on a different host/port. The matching docker-compose.yml
+      # for the sidecars lives in the orca-slicer-api fork
+      # (https://github.com/maziggy/orca-slicer-api).
+      #- SLICER_API_URL=http://localhost:3003
+      #
+      # MFA at-rest encryption key (#1219). Auto-generated to
+      # DATA_DIR/.mfa_encryption_key on first startup if unset. Override here
+      # to manage the key out-of-band (e.g. via a secret manager).
+      #- MFA_ENCRYPTION_KEY=
+    restart: no
+
+  syncthing:
+    image: syncthing/syncthing
+    container_name: syncthing
+    hostname: syncthing
+    environment:
+      - PUID=2000
+      - PGID=2000
+      - STGUIADDRESS=0.0.0.0:8384
+    volumes:
+      - /config/syncthing:/var/syncthing
+    network_mode: host
+    restart: no
+    healthcheck:
+      test: curl -fkLsS -m 2 127.0.0.1:8384/rest/noauth/health | grep -o --color=never OK || exit 1
+      interval: 1m
+      timeout: 10s
+      retries: 3
+
+
+volumes:
+  bambuddy_data:
+  bambuddy_logs:

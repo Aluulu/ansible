@@ -1,0 +1,8 @@
+---
+- import_playbook: packages.yml
+# - import_playbook: server-packages.yml
+# - import_playbook: desktop-packages.yml
+- import_playbook: fish.yml
+- import_playbook: dotfiles.yml
+- import_playbook: starship.yml
+- import_playbook: docker.yml

@@ -1,0 +1,10 @@
+---
+- name: Configure Fish
+  hosts: all
+  become: true
+
+  tasks:
+    - name: Set Fish as the default shell
+      ansible.builtin.user:
+        name: "{{ ansible_user }}"
+        shell: /usr/bin/fish

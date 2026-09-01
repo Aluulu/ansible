@@ -1,0 +1,35 @@
+services:
+  adguardhome:
+    image: adguard/adguardhome
+    container_name: adguardhome
+    restart: always
+    network_mode: host
+    volumes:
+      - /config/adguard/work:/opt/adguardhome/work
+      - /config/adguard/config:/opt/adguardhome/conf
+      - /etc/letsencrypt/live/adguard.callumwellard.co.uk:/etc/letsencrypt/live/adguard.callumwellard.co.uk
+      - /etc/letsencrypt/archive/adguard.callumwellard.co.uk:/etc/letsencrypt/archive/adguard.callumwellard.co.uk
+    ports:
+      - "53:53/tcp" # Plain DNS
+      - "53:53/udp" # Plain DNS
+      - "67:67/udp" # DHCP Server
+      - "68:68/udp" # DHCP Server
+      - "80:80/tcp" # Admin Panel
+      - "443:443/tcp" # Admin Panel
+      - "443:443/udp" # Admin Panel
+      - "3000:3000/tcp" # Admin Panel
+      - "853:853/tcp" # DNS-over-TLS
+      - "853:853/udp" # DNS-over-QUIC
+      - "5443:5443/tcp" # DNSCrypt
+      - "5443:5443/udp" # DNSCrypt
+      - "6060:6060/tcp" # Debugging
+
+  watchtower:
+    image: nickfedor/watchtower:latest
+    container_name: watchtower
+    restart: no
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - WATCHTOWER_CLEANUP=true
+      - WATCHTOWER_SCHEDULE=0 0 2 * * 1

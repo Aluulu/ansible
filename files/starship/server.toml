@@ -1,0 +1,157 @@
+"$schema" = 'https://starship.rs/config-schema.json'
+
+format = """
+(#5C0A0A)\
+[ SERVER ](bg:#5C0A0A fg:#FFFFFF)\
+$username\
+[](bg:#8B1111 fg:#5C0A0A)\
+$directory\
+[](fg:#8B1111 bg:#A52A2A)\
+$git_branch\
+$git_status\
+[](fg:#A52A2A bg:#721C24)\
+$c\
+$elixir\
+$elm\
+$golang\
+$gradle\
+$haskell\
+$java\
+$maven\
+$nodejs\
+$bun\
+$nim\
+$rust\
+$scala\
+[](fg:#721C24 bg:#4A0E0E)\
+$docker_context\
+[](fg:#4A0E0E bg:#2B0808)\
+$time\
+$localip\
+[ ](fg:#2B0808)\
+"""
+
+# Disable the blank line at the start of the prompt
+
+# add_newline = false
+
+# You can also replace your username with a neat symbol like   or disable this
+
+# and use the os module below
+
+[username]
+show_always = true
+style_user = "bg:#5C0A0A fg:#FFFFFF"
+style_root = "bg:#5C0A0A fg:#FFFFFF"
+format = '[$user ]($style)'
+disabled = false
+
+# An alternative to the username module which displays a symbol
+
+# that represents the current operating system
+
+[os]
+style = "bg:#5C0A0A fg:#FFFFFF"
+disabled = true
+
+[directory]
+style = "bg:#8B1111 fg:#FFFFFF"
+format = "[ $path ]($style)"
+truncation_length = 3
+truncation_symbol = "…/"
+
+[directory.substitutions]
+"Documents" = "󰈙 "
+"Downloads" = " "
+"Music" = " "
+"Pictures" = " "
+
+[c]
+symbol = " "
+style = "bg:#721C24 fg:#FFFFFF"
+format = '[ $symbol ($version) ]($style)'
+
+[docker_context]
+symbol = " "
+style = "bg:#4A0E0E fg:#FFFFFF"
+format = '[ $symbol $context ]($style)'
+
+[elixir]
+symbol = " "
+style = "bg:#721C24 fg:#FFFFFF"
+format = '[ $symbol ($version) ]($style)'
+
+[elm]
+symbol = " "
+style = "bg:#721C24 fg:#FFFFFF"
+format = '[ $symbol ($version) ]($style)'
+
+[git_branch]
+symbol = ""
+style = "bg:#A52A2A fg:#FFFFFF"
+format = '[ $symbol $branch ]($style)'
+
+[git_status]
+style = "bg:#A52A2A fg:#FFFFFF"
+format = '[$all_status$ahead_behind ]($style)'
+
+[golang]
+symbol = " "
+style = "bg:#721C24 fg:#FFFFFF"
+format = '[ $symbol ($version) ]($style)'
+
+[gradle]
+style = "bg:#721C24 fg:#FFFFFF"
+format = '[ $symbol ($version) ]($style)'
+
+[haskell]
+symbol = " "
+style = "bg:#721C24 fg:#FFFFFF"
+format = '[ $symbol ($version) ]($style)'
+
+[java]
+symbol = " "
+style = "bg:#721C24 fg:#FFFFFF"
+format = '[ $symbol ($version) ]($style)'
+
+[julia]
+symbol = " "
+style = "bg:#721C24 fg:#FFFFFF"
+format = '[ $symbol ($version) ]($style)'
+
+[nodejs]
+symbol = ""
+style = "bg:#721C24 fg:#FFFFFF"
+format = '[ $symbol ($version) ]($style)'
+
+[bun]
+symbol = ""
+style = "bg:#721C24 fg:#FFFFFF"
+format = '[ $symbol ($version) ]($style)'
+
+[nim]
+symbol = "󰆥 "
+style = "bg:#721C24 fg:#FFFFFF"
+format = '[ $symbol ($version) ]($style)'
+
+[rust]
+symbol = ""
+style = "bg:#721C24 fg:#FFFFFF"
+format = '[ $symbol ($version) ]($style)'
+
+[scala]
+symbol = " "
+style = "bg:#721C24 fg:#FFFFFF"
+format = '[ $symbol ($version) ]($style)'
+
+[time]
+disabled = false
+time_format = "%R"
+style = "bg:#2B0808 fg:#FFFFFF"
+format = '[ ♥ $time ]($style)'
+
+[localip]
+ssh_only = true
+style = "bg:#2B0808 fg:#FFFFFF"
+format = '[@$localipv4 ]($style)'
+disabled = false

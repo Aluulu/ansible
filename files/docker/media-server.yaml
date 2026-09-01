@@ -1,0 +1,274 @@
+services:
+  radarr:
+    image: lscr.io/linuxserver/radarr
+    container_name: radarr
+    environment:
+      - PUID=2000
+      - PGID=2000
+      - UMASK=002
+      - TZ=Europe/London
+    volumes:
+      - /config/radarr:/config
+      - /mnt/usb:/mnt/usb
+    restart: no
+    network_mode: "service:gluetun"
+
+
+  sonarr:
+    image: lscr.io/linuxserver/sonarr
+    container_name: sonarr
+    environment:
+      - PUID=2000
+      - PGID=2000
+      - UMASK=002
+      - TZ=Europe/London
+    volumes:
+      - /config/sonarr:/config
+      - /mnt/usb:/mnt/usb
+    restart: no
+    network_mode: "service:gluetun"
+
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr
+    container_name: prowlarr
+    environment:
+      - PUID=2000
+      - PGID=2000
+      - UMASK=002
+      - TZ=Europe/London
+    volumes:
+      - /config/prowlarr:/config
+    restart: no
+    network_mode: "service:gluetun"
+
+
+  gluetun:
+    image: qmcgaw/gluetun
+    container_name: gluetun
+    restart: no
+    privileged: true
+    cap_add:
+      - NET_ADMIN
+    environment:
+      - VPN_SERVICE_PROVIDER=custom
+      - VPN_TYPE=wireguard
+    volumes:
+      - /config/gluetun:/gluetun/wireguard # Have a file called wg0.conf in this directory. Example: /config/gluetun/wg0.conf
+    ports:
+      - 7878:7878 # radarr
+      - 9696:9696 # prowlarr
+      - 8989:8989 # sonarr
+      - 6060:6060 # qbittorrent WebUI
+      - 6881:6881 # qbittorrent tcp connection port
+      - 6881:6881/udp # qbittorrent udp connection port
+      - 8191:8191 # FlareSolverr
+      - 8084:8084 # calibre-web-automated-book-downloader
+      - 8265:8265 # radarr webUI port
+      - 8266:8266 # radarr server port
+      - "11011:11011" # Cleanuparr web port
+
+
+  jellyseerr:
+    image: fallenbagel/jellyseerr
+    container_name: jellyseerr
+    environment:
+      - LOG_LEVEL=debug
+      - PORT=5055 #optional
+    ports:
+      - 5055:5055
+    volumes:
+      - /config/jellyseerr:/app/config
+    restart: no
+
+
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent
+    container_name: qbittorrent
+    environment:
+      - PUID=2000
+      - PGID=2000
+      - TZ=Europe/London
+      - WEBUI_PORT=6060
+      - TORRENTING_PORT=6881
+    volumes:
+      - /config:/config
+      - /mnt/usb/downloads:/mnt/usb/downloads #optional
+    restart: no
+    network_mode: "service:gluetun"
+    depends_on:
+      - gluetun
+
+
+  jellyfin:
+    image: jellyfin/jellyfin
+    container_name: jellyfin
+    network_mode: 'host'
+    user: 2000:2000
+    group_add:
+      - '992'
+    volumes:
+      - /config/jellyfin:/config
+      - /config/jellyfin/cache:/cache
+      - /mnt/usb/movies:/movies
+      - /mnt/usb/shows:/shows
+      - /mnt/usb/books:/books
+    restart: no
+    environment:
+      - JELLYFIN_PublishedServerUrl=http://callumwellard.co.uk # Optional - alternative address used for autodiscovery
+    extra_hosts:
+      - "host.docker.internal:host-gateway" # Optional - may be necessary for docker healthcheck to pass if running in host network mode
+    devices:
+      - /dev/dri/renderD128:/dev/dri/renderD128
+
+
+  watchtower:
+    image: nickfedor/watchtower
+    container_name: watchtower
+    restart: no
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - WATCHTOWER_CLEANUP=true
+
+
+  flaresolverr:
+    # DockerHub mirror flaresolverr/flaresolverr:latest
+    image: ghcr.io/flaresolverr/flaresolverr
+    container_name: flaresolverr
+    environment:
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - LOG_HTML=${LOG_HTML:-false}
+      - CAPTCHA_SOLVER=${CAPTCHA_SOLVER:-none}
+      - TZ=Europe/Londone
+    restart: no
+    network_mode: "service:gluetun"
+
+  bazarr:
+    image: lscr.io/linuxserver/bazarr
+    container_name: bazarr
+    environment:
+      - PUID=2000
+      - PGID=2000
+      - TZ=Europe/London
+    volumes:
+      - /config/bazarr:/config
+      - /mnt/usb/movies:/movies
+      - /mnt/usb/shows:/tv
+    ports:
+      - 6767:6767
+    restart: no
+
+
+  tinymediamanager:
+    image: tinymediamanager/tinymediamanager:latest
+    container_name: tinymediamanager
+    environment:
+      - USER_ID=2000
+      - GROUP_ID=2000
+      - ALLOW_DIRECT_VNC=true
+      - LC_ALL=en_US.UTF-8 # force UTF8
+      - LANG=en_US.UTF-8   # force UTF8
+      # - PASSWORD=NotTinyMan
+    volumes:
+      - /config/tinymediamanager:/data
+      - /mnt/usb/movies:/media/movies
+      - /mnt/usb/shows/:/media/tv_shows
+    ports:
+      - 5900:5900 # VNC port
+      - 4000:4000 # Webinterface
+
+
+  calibre-web-automated:
+    image: crocodilestick/calibre-web-automated:latest
+    container_name: calibre-web-automated
+    environment:
+      - PUID=2000
+      - PGID=2000
+      - TZ=Europe/London
+    volumes:
+      # CW users migrating should stop their existing CW instance, make a copy of the config folder, and bind that here to carry over all of their user settings ect.
+      - /config/calibre-web-automated:/config
+      # This is an ingest dir, NOT a library one.
+      # Anything added here will be automatically added to your library according to the settings you have configured in CWA Settings page.
+      # All files placed here are REMOVED AFTER PROCESSING
+      - /config/calibre-web-automated/ingest:/cwa-book-ingest
+      # If you don't have an existing library, CWA will automatically create one at the bind provided here
+      - /mnt/usb/books:/calibre-library
+    restart: no
+    ports:
+      - 8083:8083
+
+
+  calibre-web-automated-book-downloader:
+    image: ghcr.io/calibrain/calibre-web-automated-book-downloader:latest
+    container_name: calibre-web-downloader
+    environment:
+      FLASK_PORT: 8084
+      LOG_LEVEL: info
+      BOOK_LANGUAGE: en
+      USE_BOOK_TITLE: true
+      TZ: Europe/London
+      APP_ENV: prod
+      UID: 2000
+      GID: 2000
+      CWA_DB_PATH: /auth/app.db
+    restart: no
+    # ports:
+      # - 8084:8084
+    volumes:
+      # This is where the books will be downloaded to, usually it would be
+      # the same as whatever you gave in "calibre-web-automated"
+      - /config/calibre-web-automated/ingest:/cwa-book-ingest
+      # This is the location of CWA's app.db, which contains authentication
+      # details
+      - /config/calibre-web-automated/app.db:/auth/app.db:ro
+    network_mode: "service:gluetun"
+
+
+  tdarr:
+    container_name: tdarr
+    image: ghcr.io/haveagitgat/tdarr:latest
+    restart: no
+    network_mode: "service:gluetun"
+    environment:
+      - TZ=Europe/London
+      - PUID=2000
+      - PGID=2000
+      - UMASK_SET=002
+      - serverIP=0.0.0.0
+      - serverPort=8266
+      - webUIPort=8265
+      - internalNode=true
+      - inContainer=true
+      - ffmpegVersion=7
+      - nodeName=MyInternalNode
+      - auth=false # tapi_utl4Btaue -> Found in Tools > API Keys
+      - openBrowser=true
+      - maxLogSizeMB=10
+      - cronPluginUpdate=
+      - NVIDIA_DRIVER_CAPABILITIES=all
+      - NVIDIA_VISIBLE_DEVICES=all
+    volumes:
+      - /config/tdarr/server:/app/server
+      - /config/tdarr/configs:/app/configs
+      - /config/tdarr/logs:/app/logs
+      - /mnt/usb/movies:/movies
+      - /mnt/usb/shows:/shows
+      - /transcode_cache:/temp
+    devices:
+      - /dev/dri:/dev/dri
+
+
+  cleanuparr:
+    image: ghcr.io/cleanuparr/cleanuparr:latest
+    container_name: cleanuparr
+    restart: no
+    volumes:
+      - /config/cleanuparr:/config
+    environment:
+      - PORT=11011
+      - PUID=2000
+      - PGID=2000
+      - UMASK=022
+      - TZ=Europe/London
+    network_mode: "service:gluetun"
