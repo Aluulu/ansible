@@ -51,3 +51,21 @@
         files:
           - compose.yaml
         state: present
+
+
+- name: Deploy uptime Server
+  hosts: aerial
+
+  tasks:
+    - name: Copy Uptime Compose file
+      ansible.builtin.copy:
+        src: ../files/docker/uptime.yaml
+        dest: "{{ ansible_facts['env']['HOME'] }}/compose.yaml"
+        mode: '0644'
+
+    - name: Start Uptime Server
+      community.docker.docker_compose_v2:
+        project_src: "{{ ansible_facts['env']['HOME'] }}"
+        files:
+          - compose.yaml
+        state: present
