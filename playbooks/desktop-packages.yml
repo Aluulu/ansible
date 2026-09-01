@@ -1,0 +1,13 @@
+---
+- name: Install desktop packages
+  hosts: desktops
+  become: true
+
+  tasks:
+    - name: Install desktop packages
+      ansible.builtin.package:
+        name:
+          - steam
+          - alacritty
+          - firefox
+        state: present
