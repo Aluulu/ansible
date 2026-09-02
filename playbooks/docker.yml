@@ -65,6 +65,12 @@
         gid: 2000
         state: present
 
+    - name: Add user to docker_user group
+      ansible.builtin.user:
+        name: "{{ ansible_user }}"
+        groups: docker_user
+        append: true
+
     - name: Create Docker service user
       ansible.builtin.user:
         name: docker_user

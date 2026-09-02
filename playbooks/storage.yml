@@ -1,0 +1,28 @@
+---
+- name: Configure Nami storage
+  hosts: nami
+  become: true
+
+  tasks:
+    - name: Ensure USB storage is mounted
+      ansible.posix.mount:
+        path: /mnt/usb
+        src: UUID=9efb23a2-7e93-4366-a6a7-2980386d82f4
+        fstype: ext4
+        opts: defaults,nofail
+        dump: '0'
+        passno: '2'
+        state: mounted
+
+    - name: Create storage directories
+      ansible.builtin.file:
+        path: "/mnt/usb/{{ item }}"
+        state: directory
+        owner: docker_user
+        group: docker_user
+        mode: '0770'
+      loop:
+        - downloads
+        - shows
+        - movies
+        - books
