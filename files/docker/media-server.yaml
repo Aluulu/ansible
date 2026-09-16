@@ -11,7 +11,9 @@ services:
       - /config/radarr:/config
       - /mnt/usb:/mnt/usb
     restart: no
-    network_mode: "service:gluetun"
+    ports:
+      - 7878:7878
+    # network_mode: "service:gluetun"
 
 
   sonarr:
@@ -26,7 +28,9 @@ services:
       - /config/sonarr:/config
       - /mnt/usb:/mnt/usb
     restart: no
-    network_mode: "service:gluetun"
+    ports:
+      - 8989:8989
+    # network_mode: "service:gluetun"
 
   prowlarr:
     image: lscr.io/linuxserver/prowlarr
@@ -39,7 +43,9 @@ services:
     volumes:
       - /config/prowlarr:/config
     restart: no
-    network_mode: "service:gluetun"
+    ports:
+      - 9696:9696
+    # network_mode: "service:gluetun"
 
 
   gluetun:
@@ -55,17 +61,17 @@ services:
     volumes:
       - /config/gluetun:/gluetun/wireguard # Have a file called wg0.conf in this directory. Example: /config/gluetun/wg0.conf
     ports:
-      - 7878:7878 # radarr
-      - 9696:9696 # prowlarr
-      - 8989:8989 # sonarr
+      # - 7878:7878 # radarr
+      # - 9696:9696 # prowlarr
+      # - 8989:8989 # sonarr
       - 6060:6060 # qbittorrent WebUI
       - 6881:6881 # qbittorrent tcp connection port
       - 6881:6881/udp # qbittorrent udp connection port
       - 8191:8191 # FlareSolverr
       - 8084:8084 # calibre-web-automated-book-downloader
-      - 8265:8265 # radarr webUI port
-      - 8266:8266 # radarr server port
-      - "11011:11011" # Cleanuparr web port
+      # - 8265:8265 # radarr webUI port
+      # - 8266:8266 # radarr server port
+      - 11011:11011 # Cleanuparr web port
 
 
   jellyseerr:
@@ -141,7 +147,7 @@ services:
       - CAPTCHA_SOLVER=${CAPTCHA_SOLVER:-none}
       - TZ=Europe/Londone
     restart: no
-    network_mode: "service:gluetun"
+    # network_mode: "service:gluetun"
 
   bazarr:
     image: lscr.io/linuxserver/bazarr
@@ -222,14 +228,14 @@ services:
       # This is the location of CWA's app.db, which contains authentication
       # details
       - /config/calibre-web-automated/app.db:/auth/app.db:ro
-    network_mode: "service:gluetun"
+    # network_mode: "service:gluetun"
 
 
   tdarr:
     container_name: tdarr
     image: ghcr.io/haveagitgat/tdarr:latest
     restart: no
-    network_mode: "service:gluetun"
+    # network_mode: "service:gluetun"
     environment:
       - TZ=Europe/London
       - PUID=2000
@@ -271,4 +277,4 @@ services:
       - PGID=2000
       - UMASK=022
       - TZ=Europe/London
-    network_mode: "service:gluetun"
+    # network_mode: "service:gluetun"

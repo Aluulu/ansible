@@ -14,15 +14,28 @@ services:
       - "53:53/udp" # Plain DNS
       - "67:67/udp" # DHCP Server
       - "68:68/udp" # DHCP Server
-      - "80:80/tcp" # Admin Panel
-      - "443:443/tcp" # Admin Panel
-      - "443:443/udp" # Admin Panel
-      - "3000:3000/tcp" # Admin Panel
+      # - "80:80/tcp" # Admin Panel
+      # - "443:443/tcp" # Admin Panel
+      # - "443:443/udp" # Admin Panel
+      - "4000:4000/tcp" # Admin Panel
       - "853:853/tcp" # DNS-over-TLS
       - "853:853/udp" # DNS-over-QUIC
       - "5443:5443/tcp" # DNSCrypt
       - "5443:5443/udp" # DNSCrypt
       - "6060:6060/tcp" # Debugging
+
+
+  NginxProxyManager:
+    image: 'docker.io/jc21/nginx-proxy-manager:latest'
+    container_name: NginxProxyManager
+    restart: always
+    ports:
+      - '80:80'
+      - '81:81'
+      - '443:443'
+    volumes:
+      - /config/NginxProxyManager:/data
+      - /config/NginxProxyManager/letsencrypt:/etc/letsencrypt
 
   watchtower:
     image: nickfedor/watchtower:latest

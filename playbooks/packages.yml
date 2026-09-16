@@ -15,4 +15,5 @@
           - btop
           - nano
           - starship
+          - fastfetch
         state: present
