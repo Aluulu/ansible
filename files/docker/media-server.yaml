@@ -108,7 +108,7 @@ services:
       - WEBUI_PORT=6060
       - TORRENTING_PORT=6881
     volumes:
-      - /config:/config
+      - /config/qbittorrent:/config
       - /mnt/usb/downloads:/mnt/usb/downloads #optional
     restart: no
     network_mode: "service:gluetun"
