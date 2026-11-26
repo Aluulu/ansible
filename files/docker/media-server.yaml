@@ -10,6 +10,7 @@ services:
     volumes:
       - /config/radarr:/config
       - /mnt/usb:/mnt/usb
+      - /mnt/usb/downloads:/downloads
     restart: no
     ports:
       - 7878:7878
@@ -27,6 +28,7 @@ services:
     volumes:
       - /config/sonarr:/config
       - /mnt/usb:/mnt/usb
+      - /mnt/usb/downloads:/downloads
     restart: no
     ports:
       - 8989:8989
@@ -109,7 +111,7 @@ services:
       - TORRENTING_PORT=6881
     volumes:
       - /config/qbittorrent:/config
-      - /mnt/usb/downloads:/mnt/usb/downloads #optional
+      - /mnt/usb/downloads:/downloads #optional
     restart: no
     network_mode: "service:gluetun"
     depends_on:
